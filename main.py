@@ -18,21 +18,22 @@ def main():
     recommended_positions = api.get_recommended_champion_positions()
     champions_for_role_by_mastery = get_champions_for_role_by_mastery(ddragon_data, mastery, recommended_positions)
     champions_for_role = get_champions_for_role(champions_for_role_by_mastery, champions)
-    print("Топ")
-    for champion in champions_for_role.top:
-        print(champion)
-    print("Лес")
-    for champion in champions_for_role.jungle:
-        print(champion)
-    print("Мид")
-    for champion in champions_for_role.middle:
-        print(champion)
-    print("Бот")
-    for champion in champions_for_role.bottom:
-        print(champion)
-    print("Саппорт")
-    for champion in champions_for_role.utility:
-        print(champion)
+    champions_for_role.print_table()
+    # print("Топ")
+    # for champion in champions_for_role.top:
+    #     print(champion)
+    # print("Лес")
+    # for champion in champions_for_role.jungle:
+    #     print(champion)
+    # print("Мид")
+    # for champion in champions_for_role.middle:
+    #     print(champion)
+    # print("Бот")
+    # for champion in champions_for_role.bottom:
+    #     print(champion)
+    # print("Саппорт")
+    # for champion in champions_for_role.utility:
+    #     print(champion)
     # mastery = api.get_champions_for_role_by_mastery()
     # pprint(mastery)
 
