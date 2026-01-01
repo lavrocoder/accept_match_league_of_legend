@@ -135,6 +135,17 @@ class LcuApi(object):
 
         return None
 
+    def get_lobby_members(self):
+        """Получает список участников лобби."""
+        data = self.lcu_request("/lol-lobby/v2/lobby")
+        if data:
+            return data.get("members", [])
+        return []
+
+    def get_summoner_by_puuid(self, puuid):
+        """Получает информацию о саммонере по PUUID."""
+        return self.lcu_request(f"/lol-summoner/v2/summoners/puuid/{puuid}")
+
 
 class Client(LcuApi):
     def get_queues(self):
