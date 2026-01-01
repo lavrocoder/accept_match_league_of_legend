@@ -125,15 +125,15 @@ def main():
                         picked = api.get_picked_champions()
                         unavailable = banned | picked
 
-                        champ_id, champ_name = find_available_champion(pick_preset, unavailable)
+                        champ = find_available_champion(pick_preset, unavailable)
 
-                        if champ_id:
-                            print(f"🎯 Пикаем: {champ_name}")
-                            if api.perform_action(pick_action_id, champ_id, complete=True):
-                                print(f"✅ {champ_name} выбран!")
+                        if champ:
+                            print(f"🎯 Пикаем: {champ.name}")
+                            if api.perform_action(pick_action_id, champ.id, complete=True):
+                                print(f"✅ {champ.name} выбран!")
                                 pick_completed = True
                             else:
-                                print(f"❌ Ошибка при пике {champ_name}")
+                                print(f"❌ Ошибка при пике {champ.name}")
                         else:
                             print("⚠️ Нет доступных чемпионов для пика из пресета")
                             pick_completed = True
