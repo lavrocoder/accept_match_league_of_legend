@@ -146,6 +146,10 @@ class LcuApi(object):
         """Получает информацию о саммонере по PUUID."""
         return self.lcu_request(f"/lol-summoner/v2/summoners/puuid/{puuid}")
 
+    def get_ranked_stats(self, puuid):
+        """Получает ранговую статистику игрока по PUUID."""
+        return self.lcu_request(f"/lol-ranked/v1/ranked-stats/{puuid}")
+
 
 class Client(LcuApi):
     def get_queues(self):

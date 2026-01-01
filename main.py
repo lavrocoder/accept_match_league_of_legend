@@ -2,7 +2,7 @@ from app.clients.lcu_api import Client
 
 from app.config import CONFIG_FILE, BASE_CONFIG_FILE, CHAMPIONS_FILE
 from app.utils import get_or_download_champions, get_champions_for_role_by_mastery, load_champions, get_current_queue, \
-    get_role_name, find_available_champion
+    get_role_name, find_available_champion, print_lobby
 from app.utils.get_champions_for_role import get_champions_for_role
 
 
@@ -47,6 +47,8 @@ def main():
             if current_phase_name != last_phase:
                 if current_phase:
                     print(f"📍 Фаза: {current_phase_name}")
+                    if current_phase == 'Matchmaking':
+                        print_lobby(api)
                 last_phase = current_phase_name
                 # Сбрасываем флаги при смене фазы
                 if current_phase != "ChampSelect":
