@@ -3,3 +3,6 @@ from .get_champions_for_role_by_mastery import get_champions_for_role_by_mastery
 from .load_or_create_config import load_or_create_config
 from .get_champions_by_region import get_champions_by_region
 from .load_champions import load_champions
+from .get_current_queue import get_current_queue
+from .get_role_name import get_role_name
+from .find_available_champion import find_available_champion

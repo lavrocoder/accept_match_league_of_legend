@@ -1,7 +1,7 @@
 from app.models import Champions
 
 
-def get_champions_for_role(champions_for_role_by_mastery, champions: Champions):
+def get_champions_for_role(champions_for_role_by_mastery, champions: Champions) -> Champions:
     champs = Champions()
     roles = ['top', 'top_ban', 'jungle', 'jungle_ban', 'middle', 'middle_ban',
              'bottom', 'bottom_ban', 'utility', 'utility_ban']

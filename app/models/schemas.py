@@ -74,3 +74,6 @@ class Champions(BaseModel):
 
         console = Console()
         console.print(table)
+
+    def get_presets_for_role(self, role: str) -> tuple[list[Champion], list[Champion]]:
+        return getattr(self, role), getattr(self, f"{role}_ban")
