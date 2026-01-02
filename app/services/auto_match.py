@@ -31,20 +31,23 @@ def main():
         if port and token:
             api = Client(port, token)
             if not is_port_printed:
-                print(f"Подключено к клиенту")
-                is_port_printed = True
                 mastery = api.get_champions_mastery()
-                recommended_positions = api.get_recommended_champion_positions()
-                champions_for_role_by_mastery = get_champions_for_role_by_mastery(ddragon_data, mastery,
-                                                                                  recommended_positions)
-                champions_for_role = get_champions_for_role(champions_for_role_by_mastery, champions)
-                champions_for_role.print_table()
+                if mastery:
+                    print(f"Подключено к клиенту")
+                    is_port_printed = True
+                    recommended_positions = api.get_recommended_champion_positions()
+                    champions_for_role_by_mastery = get_champions_for_role_by_mastery(ddragon_data, mastery,
+                                                                                      recommended_positions)
+                    champions_for_role = get_champions_for_role(champions_for_role_by_mastery, champions)
+                    champions_for_role.print_table()
 
-                queues = api.get_queues()
+                    queues = api.get_queues()
 
             # region Логируем смену фазы
             current_phase = api.get_gameflow_phase()
             session = api.get_session()
+            if session is None:
+                continue
             queue_id = session.get("gameData", {}).get("queue", {}).get("id")
             queue_name = get_current_queue(queues, queue_id)
 
