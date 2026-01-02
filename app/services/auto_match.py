@@ -10,6 +10,7 @@ def main():
     print("Загрузка героев")
     ddragon_data = get_or_download_champions(CHAMPIONS_FILE)
     champions = load_champions(CONFIG_FILE, BASE_CONFIG_FILE, ddragon_data)
+    print("Пресеты загружены")
 
     match_accepted = False
     is_port_printed = False
@@ -21,6 +22,7 @@ def main():
     pick_completed = False
     queues = []
 
+    print(f"Ожидание подключения к клиенту")
     while True:
         port, token = Client.get_port_and_token()
         if port and token:

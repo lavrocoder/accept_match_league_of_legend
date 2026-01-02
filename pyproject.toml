@@ -1,6 +1,6 @@
 [project]
 name = "accept-match-league-of-legend"
-version = "0.1.0"
+version = "1.0.0"
 description = "Автоматическое принятие матча в League of Legends. Автоматический бан и пик чемпионов"
 authors = [
     {name = "Евгений Лавров", email = "i@evgenylavrov.ru"}
