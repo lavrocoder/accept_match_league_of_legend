@@ -1,0 +1,52 @@
+Вводите чемпионов для пика между "# region ..." и "# endregion ..."
+Чемпионов можно вводить как на русском языке, так и на английском.
+Чтобы получить список, чемпионов запустите "champions.bat".
+
+# region Топ (пик)
+
+# endregion Топ (пик)
+
+
+# region Топ (бан)
+
+# endregion Топ (бан)
+
+
+# region Лес (пик)
+
+# endregion Лес (пик)
+
+
+# region Лес (бан)
+
+# endregion Лес (бан)
+
+
+# region Мид (пик)
+
+# endregion Мид (пик)
+
+
+# region Мид (бан)
+
+# endregion Мид (бан)
+
+
+# region Бот (пик)
+
+# endregion Бот (пик)
+
+
+# region Бот (бан)
+
+# endregion Бот (бан)
+
+
+# region Саппорт (пик)
+
+# endregion Саппорт (пик)
+
+
+# region Саппорт (бан)
+
+# endregion Саппорт (бан)
