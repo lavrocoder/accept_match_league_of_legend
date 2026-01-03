@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoL Auto Accept</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>LoL Auto</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="home">
+                    <span class="nav-icon">&#127968;</span>
+                    <span class="nav-text">Главная</span>
+                </li>
+                <li class="nav-item" data-page="presets">
+                    <span class="nav-icon">&#128203;</span>
+                    <span class="nav-text">Пресеты</span>
+                </li>
+                <li class="nav-item" data-page="lobby">
+                    <span class="nav-icon">&#128101;</span>
+                    <span class="nav-text">Лобби</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div id="connection-status" class="status disconnected">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Ожидание...</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Home Page -->
+            <div class="page active" id="page-home">
+                <header class="page-header">
+                    <h2>Главная</h2>
+                </header>
+
+                <section class="control-panel">
+                    <div class="settings">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="auto-accept" checked>
+                            <span>Авто-принятие матча</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="auto-ban" checked>
+                            <span>Авто-бан</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="auto-pick" checked>
+                            <span>Авто-пик</span>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="info-panel">
+                    <div class="phase-info">
+                        <h3>Текущая фаза</h3>
+                        <div id="current-phase" class="phase-badge">-</div>
+                    </div>
+
+                    <div class="role-info">
+                        <h3>Роль</h3>
+                        <div id="current-role" class="role-badge">-</div>
+                    </div>
+                </section>
+
+                <section class="champions-overview-section">
+                    <div class="section-header">
+                        <h2>Пресеты чемпионов</h2>
+                        <a href="#" class="link-to-presets" onclick="navigateTo('presets'); return false;">Редактировать</a>
+                    </div>
+                    <div id="champions-table" class="champions-table">
+                        <p class="placeholder">Загрузка данных...</p>
+                    </div>
+                </section>
+
+                <section class="log-section">
+                    <h2>Лог событий</h2>
+                    <div id="log-container" class="log-container">
+                        <div class="log-entry info">Приложение запущено</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Presets Page -->
+            <div class="page" id="page-presets">
+                <header class="page-header">
+                    <h2>Пресеты чемпионов</h2>
+                    <div class="header-actions">
+                        <button id="import-presets-btn" class="btn btn-secondary btn-sm">Импорт из файла</button>
+                    </div>
+                </header>
+
+                <!-- Role Tabs -->
+                <div class="role-tabs">
+                    <button class="role-tab active" data-role="top">Топ</button>
+                    <button class="role-tab" data-role="jungle">Лес</button>
+                    <button class="role-tab" data-role="middle">Мид</button>
+                    <button class="role-tab" data-role="bottom">Бот</button>
+                    <button class="role-tab" data-role="utility">Саппорт</button>
+                </div>
+
+                <div class="presets-container">
+                    <!-- Pick Preset -->
+                    <section class="preset-section">
+                        <div class="preset-header">
+                            <h3>Пики</h3>
+                            <button class="btn btn-add" id="add-pick-btn">+ Добавить</button>
+                        </div>
+                        <div id="pick-preset-list" class="preset-list">
+                            <p class="placeholder">Нет чемпионов</p>
+                        </div>
+                    </section>
+
+                    <!-- Ban Preset -->
+                    <section class="preset-section">
+                        <div class="preset-header">
+                            <h3>Баны</h3>
+                            <button class="btn btn-add" id="add-ban-btn">+ Добавить</button>
+                        </div>
+                        <div id="ban-preset-list" class="preset-list">
+                            <p class="placeholder">Нет чемпионов</p>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Champion Search Modal -->
+                <div id="champion-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Выберите чемпиона</h3>
+                            <button class="modal-close" id="modal-close">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="text" id="champion-search" class="search-input" placeholder="Поиск чемпиона...">
+                            <div id="champion-list" class="champion-grid">
+                                <p class="placeholder">Загрузка...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lobby Page -->
+            <div class="page" id="page-lobby">
+                <header class="page-header">
+                    <h2>Лобби</h2>
+                    <span id="lobby-update-time" class="update-time"></span>
+                </header>
+
+                <section class="lobby-info-section">
+                    <div class="lobby-status-card">
+                        <h3>Статус лобби</h3>
+                        <div id="lobby-status" class="lobby-status">
+                            <p class="placeholder">Ожидание данных...</p>
+                        </div>
+                    </div>
+
+                    <div class="lobby-queue-card">
+                        <h3>Режим игры</h3>
+                        <div id="lobby-queue" class="lobby-queue">-</div>
+                    </div>
+                </section>
+
+                <section class="lobby-members-section">
+                    <h2>Участники лобби</h2>
+                    <div id="lobby-members" class="lobby-members">
+                        <p class="placeholder">Нет данных о лобби</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="/eel.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
