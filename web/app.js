@@ -41,13 +41,25 @@ let currentPresets = {};
 const championsTable = document.getElementById('champions-table');
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     initNavigation();
     initPresets();
     loadPresetsForHomePage();
+    await loadSettings();
     startBot();
 });
+
+async function loadSettings() {
+    try {
+        const settings = await eel.get_settings()();
+        autoAcceptCheckbox.checked = settings.auto_accept !== false;
+        autoBanCheckbox.checked = settings.auto_ban !== false;
+        autoPickCheckbox.checked = settings.auto_pick !== false;
+    } catch (error) {
+        console.error('Failed to load settings:', error);
+    }
+}
 
 function initNavigation() {
     navItems.forEach(item => {

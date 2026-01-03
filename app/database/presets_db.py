@@ -51,6 +51,22 @@ class PresetsDatabase:
                 ON presets(role, preset_type)
             ''')
 
+            # Create settings table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                )
+            ''')
+
+            # Initialize default settings if not exist
+            cursor.execute('''
+                INSERT OR IGNORE INTO settings (key, value) VALUES
+                ('auto_accept', '1'),
+                ('auto_ban', '1'),
+                ('auto_pick', '1')
+            ''')
+
     def get_preset(self, role: str, preset_type: str) -> list[dict]:
         """Get champions for a specific role and preset type"""
         with self._get_connection() as conn:
@@ -232,3 +248,27 @@ class PresetsDatabase:
             cursor = conn.cursor()
             cursor.execute('SELECT COUNT(*) as count FROM presets')
             return cursor.fetchone()['count'] == 0
+
+    # Settings methods
+    def get_setting(self, key: str) -> bool:
+        """Get a boolean setting value"""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT value FROM settings WHERE key = ?', (key,))
+            row = cursor.fetchone()
+            return row['value'] == '1' if row else True
+
+    def set_setting(self, key: str, value: bool):
+        """Set a boolean setting value"""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)
+            ''', (key, '1' if value else '0'))
+
+    def get_all_settings(self) -> dict:
+        """Get all settings as a dictionary"""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT key, value FROM settings')
+            return {row['key']: row['value'] == '1' for row in cursor.fetchall()}

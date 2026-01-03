@@ -205,6 +205,11 @@ class AutoMatchBot:
             self.champions = self._load_champions_from_db()
         self.log("Presets loaded", "success")
 
+        # Load settings from database
+        self.auto_accept = db.get_setting('auto_accept')
+        self.auto_ban = db.get_setting('auto_ban')
+        self.auto_pick = db.get_setting('auto_pick')
+
     def _load_champions_from_db(self) -> Champions:
         """Load champions from database into Champions model"""
         db = get_presets_db()
@@ -437,9 +442,23 @@ def stop_bot():
 @eel.expose
 def update_settings(settings: dict):
     """Update bot settings - called from JavaScript"""
+    db = get_presets_db()
+
     bot.auto_accept = settings.get('auto_accept', True)
     bot.auto_ban = settings.get('auto_ban', True)
     bot.auto_pick = settings.get('auto_pick', True)
+
+    # Save to database
+    db.set_setting('auto_accept', bot.auto_accept)
+    db.set_setting('auto_ban', bot.auto_ban)
+    db.set_setting('auto_pick', bot.auto_pick)
+
+
+@eel.expose
+def get_settings():
+    """Get settings from database - called from JavaScript"""
+    db = get_presets_db()
+    return db.get_all_settings()
 
 
 @eel.expose
