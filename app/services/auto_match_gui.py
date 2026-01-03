@@ -652,7 +652,7 @@ def run_gui():
     import os
 
     # Get the path to the web folder
-    web_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'web')
+    web_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'web')
 
     eel.init(web_folder)
 
