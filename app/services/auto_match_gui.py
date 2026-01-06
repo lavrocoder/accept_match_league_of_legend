@@ -45,7 +45,6 @@ class AutoMatchBot:
         self.auto_pick = True
 
         # State
-        self.match_accepted = False
         self.is_connected = False
         self.last_phase = None
         self.current_role = None
@@ -178,7 +177,6 @@ class AutoMatchBot:
 
     def reset_state(self):
         """Reset bot state"""
-        self.match_accepted = False
         self.last_phase = None
         self.current_role = None
         self.role_printed = False
@@ -305,20 +303,15 @@ class AutoMatchBot:
                     if current_phase == "ReadyCheck" and self.auto_accept:
                         ready_check = api.check_match_found()
 
-                        if ready_check and not self.match_accepted:
+                        if ready_check:
                             player_response = ready_check.get("playerResponse", "None")
 
                             if player_response == "None":
                                 self.log(f"Match found! Mode: {queue_name}", "warning")
                                 if api.accept_match():
                                     self.log("Match accepted!", "success")
-                                    self.match_accepted = True
                                 else:
                                     self.log("Failed to accept match", "error")
-                            elif player_response == "Accepted":
-                                self.match_accepted = True
-                    else:
-                        self.match_accepted = False
 
                     # Handle champion select
                     if current_phase == "ChampSelect":
