@@ -1,9 +1,36 @@
-import sqlite3
 from pathlib import Path
 from typing import Optional
-from contextlib import contextmanager
+
+from sqlalchemy import create_engine, Column, Integer, String, Text, UniqueConstraint, Index
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 from app.config import DATA_DIR
+from app.models import Champions
+
+Base = declarative_base()
+
+
+class Preset(Base):
+    __tablename__ = 'presets'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    role = Column(String(20), nullable=False)
+    preset_type = Column(String(10), nullable=False)
+    champion_id = Column(Integer, nullable=False)
+    champion_name = Column(String(50), nullable=False)
+    position = Column(Integer, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('role', 'preset_type', 'champion_id', name='uq_role_type_champion'),
+        Index('idx_role_type', 'role', 'preset_type'),
+    )
+
+
+class Setting(Base):
+    __tablename__ = 'settings'
+
+    key = Column(String(50), primary_key=True)
+    value = Column(Text, nullable=False)
 
 
 class PresetsDatabase:
@@ -14,77 +41,40 @@ class PresetsDatabase:
 
     def __init__(self, db_path: Optional[Path] = None):
         self.db_path = db_path or DATA_DIR / 'presets.db'
+        self.engine = create_engine(f'sqlite:///{self.db_path}', echo=False)
+        self.SessionLocal = sessionmaker(bind=self.engine)
         self._init_db()
 
-    @contextmanager
-    def _get_connection(self):
-        """Context manager for database connections"""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        try:
-            yield conn
-            conn.commit()
-        finally:
-            conn.close()
+    def _get_session(self) -> Session:
+        """Get a new database session"""
+        return self.SessionLocal()
 
     def _init_db(self):
         """Initialize database tables"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
+        Base.metadata.create_all(self.engine)
 
-            # Create presets table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS presets (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    role TEXT NOT NULL,
-                    preset_type TEXT NOT NULL,
-                    champion_id INTEGER NOT NULL,
-                    champion_name TEXT NOT NULL,
-                    position INTEGER NOT NULL,
-                    UNIQUE(role, preset_type, champion_id)
-                )
-            ''')
-
-            # Create index for faster queries
-            cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_role_type
-                ON presets(role, preset_type)
-            ''')
-
-            # Create settings table
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS settings (
-                    key TEXT PRIMARY KEY,
-                    value TEXT NOT NULL
-                )
-            ''')
-
-            # Initialize default settings if not exist
-            cursor.execute('''
-                INSERT OR IGNORE INTO settings (key, value) VALUES
-                ('auto_accept', '1'),
-                ('auto_ban', '1'),
-                ('auto_pick', '1')
-            ''')
+        # Initialize default settings if not exist
+        with self._get_session() as session:
+            for key in ['auto_accept', 'auto_ban', 'auto_pick']:
+                existing = session.query(Setting).filter_by(key=key).first()
+                if not existing:
+                    session.add(Setting(key=key, value='1'))
+            session.commit()
 
     def get_preset(self, role: str, preset_type: str) -> list[dict]:
         """Get champions for a specific role and preset type"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT champion_id, champion_name, position
-                FROM presets
-                WHERE role = ? AND preset_type = ?
-                ORDER BY position
-            ''', (role, preset_type))
+        with self._get_session() as session:
+            presets = session.query(Preset).filter_by(
+                role=role, preset_type=preset_type
+            ).order_by(Preset.position).all()
 
             return [
                 {
-                    'id': row['champion_id'],
-                    'name': row['champion_name'],
-                    'position': row['position']
+                    'id': p.champion_id,
+                    'name': p.champion_name,
+                    'position': p.position
                 }
-                for row in cursor.fetchall()
+                for p in presets
             ]
 
     def get_all_presets(self) -> dict:
@@ -97,129 +87,116 @@ class PresetsDatabase:
 
     def set_preset(self, role: str, preset_type: str, champions: list[dict]):
         """Set champions for a specific role and preset type"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-
+        with self._get_session() as session:
             # Clear existing preset
-            cursor.execute('''
-                DELETE FROM presets
-                WHERE role = ? AND preset_type = ?
-            ''', (role, preset_type))
+            session.query(Preset).filter_by(role=role, preset_type=preset_type).delete()
 
             # Insert new champions
             for position, champ in enumerate(champions):
-                cursor.execute('''
-                    INSERT INTO presets (role, preset_type, champion_id, champion_name, position)
-                    VALUES (?, ?, ?, ?, ?)
-                ''', (role, preset_type, champ['id'], champ['name'], position))
+                session.add(Preset(
+                    role=role,
+                    preset_type=preset_type,
+                    champion_id=champ['id'],
+                    champion_name=champ['name'],
+                    position=position
+                ))
+            session.commit()
 
     def add_champion_to_preset(self, role: str, preset_type: str, champion_id: int, champion_name: str):
         """Add a champion to the end of a preset"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-
+        with self._get_session() as session:
             # Get max position
-            cursor.execute('''
-                SELECT COALESCE(MAX(position), -1) as max_pos
-                FROM presets
-                WHERE role = ? AND preset_type = ?
-            ''', (role, preset_type))
-            max_pos = cursor.fetchone()['max_pos']
+            max_pos = session.query(Preset.position).filter_by(
+                role=role, preset_type=preset_type
+            ).order_by(Preset.position.desc()).first()
 
-            # Insert new champion
-            cursor.execute('''
-                INSERT OR REPLACE INTO presets (role, preset_type, champion_id, champion_name, position)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (role, preset_type, champion_id, champion_name, max_pos + 1))
+            new_position = (max_pos[0] + 1) if max_pos else 0
+
+            # Check if champion already exists
+            existing = session.query(Preset).filter_by(
+                role=role, preset_type=preset_type, champion_id=champion_id
+            ).first()
+
+            if existing:
+                existing.position = new_position
+            else:
+                session.add(Preset(
+                    role=role,
+                    preset_type=preset_type,
+                    champion_id=champion_id,
+                    champion_name=champion_name,
+                    position=new_position
+                ))
+            session.commit()
 
     def remove_champion_from_preset(self, role: str, preset_type: str, champion_id: int):
         """Remove a champion from a preset"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
+        with self._get_session() as session:
+            preset = session.query(Preset).filter_by(
+                role=role, preset_type=preset_type, champion_id=champion_id
+            ).first()
 
-            # Get position of champion to remove
-            cursor.execute('''
-                SELECT position FROM presets
-                WHERE role = ? AND preset_type = ? AND champion_id = ?
-            ''', (role, preset_type, champion_id))
-            row = cursor.fetchone()
-
-            if row:
-                removed_position = row['position']
-
-                # Delete champion
-                cursor.execute('''
-                    DELETE FROM presets
-                    WHERE role = ? AND preset_type = ? AND champion_id = ?
-                ''', (role, preset_type, champion_id))
+            if preset:
+                removed_position = preset.position
+                session.delete(preset)
 
                 # Update positions of remaining champions
-                cursor.execute('''
-                    UPDATE presets
-                    SET position = position - 1
-                    WHERE role = ? AND preset_type = ? AND position > ?
-                ''', (role, preset_type, removed_position))
+                session.query(Preset).filter(
+                    Preset.role == role,
+                    Preset.preset_type == preset_type,
+                    Preset.position > removed_position
+                ).update({Preset.position: Preset.position - 1})
+
+                session.commit()
 
     def move_champion(self, role: str, preset_type: str, champion_id: int, new_position: int):
         """Move a champion to a new position in the preset"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
+        with self._get_session() as session:
+            preset = session.query(Preset).filter_by(
+                role=role, preset_type=preset_type, champion_id=champion_id
+            ).first()
 
-            # Get current position
-            cursor.execute('''
-                SELECT position FROM presets
-                WHERE role = ? AND preset_type = ? AND champion_id = ?
-            ''', (role, preset_type, champion_id))
-            row = cursor.fetchone()
-
-            if not row:
+            if not preset:
                 return
 
-            old_position = row['position']
+            old_position = preset.position
 
             if old_position == new_position:
                 return
 
             if old_position < new_position:
                 # Moving down: shift others up
-                cursor.execute('''
-                    UPDATE presets
-                    SET position = position - 1
-                    WHERE role = ? AND preset_type = ?
-                    AND position > ? AND position <= ?
-                ''', (role, preset_type, old_position, new_position))
+                session.query(Preset).filter(
+                    Preset.role == role,
+                    Preset.preset_type == preset_type,
+                    Preset.position > old_position,
+                    Preset.position <= new_position
+                ).update({Preset.position: Preset.position - 1})
             else:
                 # Moving up: shift others down
-                cursor.execute('''
-                    UPDATE presets
-                    SET position = position + 1
-                    WHERE role = ? AND preset_type = ?
-                    AND position >= ? AND position < ?
-                ''', (role, preset_type, new_position, old_position))
+                session.query(Preset).filter(
+                    Preset.role == role,
+                    Preset.preset_type == preset_type,
+                    Preset.position >= new_position,
+                    Preset.position < old_position
+                ).update({Preset.position: Preset.position + 1})
 
-            # Update champion position
-            cursor.execute('''
-                UPDATE presets
-                SET position = ?
-                WHERE role = ? AND preset_type = ? AND champion_id = ?
-            ''', (new_position, role, preset_type, champion_id))
+            preset.position = new_position
+            session.commit()
 
     def clear_preset(self, role: str, preset_type: str):
         """Clear all champions from a preset"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                DELETE FROM presets
-                WHERE role = ? AND preset_type = ?
-            ''', (role, preset_type))
+        with self._get_session() as session:
+            session.query(Preset).filter_by(role=role, preset_type=preset_type).delete()
+            session.commit()
 
     def clear_all(self):
         """Clear all presets"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('DELETE FROM presets')
+        with self._get_session() as session:
+            session.query(Preset).delete()
+            session.commit()
 
-    def import_from_champions(self, champions: 'Champions'):
+    def import_from_champions(self, champions: Champions):
         """Import presets from Champions model"""
         role_mapping = {
             'top': ('top', 'top_ban'),
@@ -244,31 +221,29 @@ class PresetsDatabase:
 
     def is_empty(self) -> bool:
         """Check if database has any presets"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT COUNT(*) as count FROM presets')
-            return cursor.fetchone()['count'] == 0
+        with self._get_session() as session:
+            count = session.query(Preset).count()
+            return count == 0
 
     # Settings methods
     def get_setting(self, key: str) -> bool:
         """Get a boolean setting value"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT value FROM settings WHERE key = ?', (key,))
-            row = cursor.fetchone()
-            return row['value'] == '1' if row else True
+        with self._get_session() as session:
+            setting = session.query(Setting).filter_by(key=key).first()
+            return setting.value == '1' if setting else True
 
     def set_setting(self, key: str, value: bool):
         """Set a boolean setting value"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)
-            ''', (key, '1' if value else '0'))
+        with self._get_session() as session:
+            setting = session.query(Setting).filter_by(key=key).first()
+            if setting:
+                setting.value = '1' if value else '0'
+            else:
+                session.add(Setting(key=key, value='1' if value else '0'))
+            session.commit()
 
     def get_all_settings(self) -> dict:
         """Get all settings as a dictionary"""
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT key, value FROM settings')
-            return {row['key']: row['value'] == '1' for row in cursor.fetchall()}
+        with self._get_session() as session:
+            settings = session.query(Setting).all()
+            return {s.key: s.value == '1' for s in settings}
