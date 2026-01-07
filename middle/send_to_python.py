@@ -1,10 +1,11 @@
 from backend.config import CONFIG_FILE, BASE_CONFIG_FILE
 from backend.models.db_models import Setting, Preset
 from backend.utils import get_lobby, get_current_queue, load_champions
+from middle.auto_match_bot import AutoMatchBot
 
 
 class EelForJS:
-    def __init__(self, bot, ddragon_data):
+    def __init__(self, bot: AutoMatchBot, ddragon_data):
         self.bot = bot
         self.ddragon_data = ddragon_data
 
