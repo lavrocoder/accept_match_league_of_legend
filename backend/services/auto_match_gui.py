@@ -4,12 +4,12 @@ from typing import Optional
 
 import eel
 
-from app.clients.lcu_api import Client
-from app.config import CONFIG_FILE, BASE_CONFIG_FILE, CHAMPIONS_FILE
-from app.database import PresetsDatabase
-from app.models.schemas import Champions, Champion
-from app.services.updater import ProjectUpdater
-from app.utils import (
+from backend.clients.lcu_api import Client
+from backend.config import CONFIG_FILE, BASE_CONFIG_FILE, CHAMPIONS_FILE, BASE_DIR
+from backend.database import PresetsDatabase
+from backend.models.schemas import Champions, Champion
+from backend.services.updater import ProjectUpdater
+from backend.utils import (
     get_or_download_champions,
     get_champions_for_role_by_mastery,
     load_champions,
@@ -17,7 +17,7 @@ from app.utils import (
     get_role_name,
     find_available_champion, get_lobby
 )
-from app.utils.get_champions_for_role import get_champions_for_role
+from backend.utils.get_champions_for_role import get_champions_for_role
 from middle.send_to_js import Eel
 from middle.send_to_python import EelForJS
 
@@ -318,16 +318,11 @@ class AutoMatchBot:
         self.eel.update_role("-")
 
 
-# Global bot instance
-bot = AutoMatchBot()
-
-
 def run_gui():
     """Initialize and start the Eel application"""
-    import os
+    web_folder = BASE_DIR / 'frontend'
 
-    # Get the path to the web folder
-    web_folder = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'web')
+    bot = AutoMatchBot()
 
     ddragon_data = get_or_download_champions(CHAMPIONS_FILE)
     eel_from_js = EelForJS(bot, ddragon_data)

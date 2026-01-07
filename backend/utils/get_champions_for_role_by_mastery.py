@@ -1,4 +1,4 @@
-from app.models import Champion, ChampionsByRoleAndMastery
+from backend.models import Champion, ChampionsByRoleAndMastery
 
 def get_champion_level_and_points(mastery: list[dict], champion_id: int) -> tuple[int, int]:
     for item in mastery:

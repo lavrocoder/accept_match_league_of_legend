@@ -1,5 +1,5 @@
-from app.config import CHAMPIONS_FILE
-from app.utils import get_or_download_champions
+from backend.config import CHAMPIONS_FILE
+from backend.utils import get_or_download_champions
 
 
 def main():

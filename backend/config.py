@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from app.utils import load_or_create_config, get_champions_by_region
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / 'data'
 DATA_DIR.mkdir(parents=True, exist_ok=True)

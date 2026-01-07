@@ -1,6 +1,6 @@
 import eel
 
-from app.models import Champions
+from backend.models import Champions
 
 
 class Eel:

@@ -1,5 +1,5 @@
-from app.config import CONFIG_FILE, BASE_CONFIG_FILE
-from app.utils import get_lobby, get_current_queue, load_champions
+from backend.config import CONFIG_FILE, BASE_CONFIG_FILE
+from backend.utils import get_lobby, get_current_queue, load_champions
 
 
 class EelForJS:

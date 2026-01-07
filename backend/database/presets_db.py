@@ -4,8 +4,8 @@ from typing import Optional
 from sqlalchemy import create_engine, Column, Integer, String, Text, UniqueConstraint, Index
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-from app.config import DATA_DIR
-from app.models import Champions
+from backend.config import DATA_DIR
+from backend.models import Champions
 
 Base = declarative_base()
 

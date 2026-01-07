@@ -18,4 +18,4 @@ if %errorlevel% neq 0 (
 
 echo.
 set PYTHONPATH=%cd%
-.venv\Scripts\python.exe app\services\auto_match_gui.py
+.venv\Scripts\python.exe backend\services\auto_match_gui.py

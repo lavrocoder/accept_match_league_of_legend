@@ -1,4 +1,4 @@
-from app.models import Champions
+from backend.models import Champions
 
 
 def get_champions_for_role(champions_for_role_by_mastery, champions: Champions) -> Champions:

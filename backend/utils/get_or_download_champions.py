@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from app.clients.ddragon_api import RiotDdragonAPI
+from backend.clients.ddragon_api import RiotDdragonAPI
 
 
 def get_or_download_champions(champions_file_path: Path):

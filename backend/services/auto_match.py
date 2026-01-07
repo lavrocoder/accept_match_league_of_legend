@@ -1,10 +1,10 @@
-from app.clients.lcu_api import Client
+from backend.clients.lcu_api import Client
 
-from app.config import CONFIG_FILE, BASE_CONFIG_FILE, CHAMPIONS_FILE
-from app.services.updater import ProjectUpdater
-from app.utils import get_or_download_champions, get_champions_for_role_by_mastery, load_champions, get_current_queue, \
+from backend.config import CONFIG_FILE, BASE_CONFIG_FILE, CHAMPIONS_FILE
+from backend.services.updater import ProjectUpdater
+from backend.utils import get_or_download_champions, get_champions_for_role_by_mastery, load_champions, get_current_queue, \
     get_role_name, find_available_champion, print_lobby
-from app.utils.get_champions_for_role import get_champions_for_role
+from backend.utils.get_champions_for_role import get_champions_for_role
 
 
 def main():

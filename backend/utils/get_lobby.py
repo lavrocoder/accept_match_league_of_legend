@@ -1,4 +1,4 @@
-from app.utils import format_rank
+from backend.utils import format_rank
 
 
 def get_lobby(api) -> list[dict]:

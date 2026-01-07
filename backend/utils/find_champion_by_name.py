@@ -1,4 +1,4 @@
-from app.models import Champion
+from backend.models import Champion
 
 
 def normolize_name(name):

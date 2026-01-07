@@ -1,4 +1,4 @@
-from app.models import Champion
+from backend.models import Champion
 
 
 def find_available_champion(preset: list[Champion], unavailable_ids: list[int]) -> Champion | None:

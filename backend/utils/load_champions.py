@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from app.models import Champions
-from app.utils import load_or_create_config, get_champions_by_region
-from app.utils.find_champion_by_name import find_champion_by_name
+from backend.models import Champions
+from backend.utils import load_or_create_config, get_champions_by_region
+from backend.utils.find_champion_by_name import find_champion_by_name
 
 
 def load_champions(file_path: Path, base_file_path: Path, ddragon_data) -> Champions:
