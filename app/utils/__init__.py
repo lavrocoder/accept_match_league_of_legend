@@ -7,3 +7,5 @@ from .get_current_queue import get_current_queue
 from .get_role_name import get_role_name
 from .find_available_champion import find_available_champion
 from .print_lobby import print_lobby
+from .format_rank import format_rank
+from .get_lobby import get_lobby
