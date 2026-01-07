@@ -1,4 +1,5 @@
 from backend.config import CONFIG_FILE, BASE_CONFIG_FILE
+from backend.models.db_models import Setting, Preset
 from backend.utils import get_lobby, get_current_queue, load_champions
 
 
@@ -17,10 +18,10 @@ class EelForJS:
         self.bot.stop()
         self.bot.eel.set_buttons_state(False)
 
-    def get_all_presets(self):
+    @staticmethod
+    def get_all_presets():
         """Get all presets from database"""
-        db = self.bot.get_presets_db()
-        return db.get_all_presets()
+        return Preset.get_all_presets()
 
     def get_all_champions(self):
         """Get all available champions from ddragon data"""
@@ -41,23 +42,22 @@ class EelForJS:
         champions.sort(key=lambda x: x['name'])
         return champions
 
-    def get_settings(self):
+    @staticmethod
+    def get_settings():
         """Get settings from database - called from JavaScript"""
-        db = self.bot.get_presets_db()
-        return db.get_all_settings()
+        return Setting.get_all_settings()
 
     def update_settings(self, settings: dict):
         """Update bot settings - called from JavaScript"""
-        db = self.bot.get_presets_db()
 
         self.bot.auto_accept = settings.get('auto_accept', True)
         self.bot.auto_ban = settings.get('auto_ban', True)
         self.bot.auto_pick = settings.get('auto_pick', True)
 
         # Save to database
-        db.set_setting('auto_accept', self.bot.auto_accept)
-        db.set_setting('auto_ban', self.bot.auto_ban)
-        db.set_setting('auto_pick', self.bot.auto_pick)
+        Setting.set_setting('auto_accept', self.bot.auto_accept)
+        Setting.set_setting('auto_ban', self.bot.auto_ban)
+        Setting.set_setting('auto_pick', self.bot.auto_pick)
 
     def request_lobby_update(self):
         """Request lobby data update - called from JavaScript every second on lobby page"""
@@ -89,25 +89,21 @@ class EelForJS:
     def import_presets_from_file(self):
         """Import presets from config file to database"""
         champions = load_champions(CONFIG_FILE, BASE_CONFIG_FILE, self.ddragon_data)
-        db = self.bot.get_presets_db()
-        db.clear_all()
-        db.import_from_champions(champions)
+        Preset.clear_all()
+        Preset.import_from_champions(champions)
         self.bot.reload_presets()
 
     def add_champion_to_preset(self, role: str, preset_type: str, champion_id: int, champion_name: str):
         """Add champion to preset"""
-        db = self.bot.get_presets_db()
-        db.add_champion_to_preset(role, preset_type, champion_id, champion_name)
+        Preset.add_champion_to_preset(role, preset_type, champion_id, champion_name)
         self.bot.reload_presets()
 
     def remove_champion_from_preset(self, role: str, preset_type: str, champion_id: int):
         """Remove champion from preset"""
-        db = self.bot.get_presets_db()
-        db.remove_champion_from_preset(role, preset_type, champion_id)
+        Preset.remove_champion_from_preset(role, preset_type, champion_id)
         self.bot.reload_presets()
 
     def move_champion_in_preset(self, role: str, preset_type: str, champion_id: int, new_position: int):
         """Move champion to new position in preset"""
-        db = self.bot.get_presets_db()
-        db.move_champion(role, preset_type, champion_id, new_position)
+        Preset.move_champion(role, preset_type, champion_id, new_position)
         self.bot.reload_presets()

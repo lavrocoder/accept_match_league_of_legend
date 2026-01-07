@@ -6,7 +6,8 @@ import eel
 
 from backend.clients.lcu_api import Client
 from backend.config import CONFIG_FILE, BASE_CONFIG_FILE, CHAMPIONS_FILE, BASE_DIR
-from backend.database import PresetsDatabase
+from backend.database import init_db
+from backend.models.db_models import Setting, Preset
 from backend.models.schemas import Champions, Champion
 from backend.services.updater import ProjectUpdater
 from backend.utils import (
@@ -23,10 +24,9 @@ from middle.send_to_python import EelForJS
 
 
 class AutoMatchBot:
-    def __init__(self):
+    def __init__(self, ddragon_data):
         self.running = False
         self.thread: Optional[threading.Thread] = None
-        self._presets_db: Optional[PresetsDatabase] = None
 
         # Settings
         self.auto_accept = True
@@ -43,18 +43,12 @@ class AutoMatchBot:
         self.pick_completed = False
 
         # Data
-        self.ddragon_data = None
+        self.ddragon_data = ddragon_data
         self.champions = None
         self.queues = []
 
         self.eel = Eel()
         self.api: Client | None = None
-
-    def get_presets_db(self) -> PresetsDatabase:
-        """Get or create presets database instance"""
-        if self._presets_db is None:
-            self._presets_db = PresetsDatabase()
-        return self._presets_db
 
     def update_connection(self, connected: bool, text: str):
         """Update connection status in UI"""
@@ -78,14 +72,12 @@ class AutoMatchBot:
     def load_data(self):
         """Load champion data"""
         self.eel.log("Loading champions...", "info")
-        self.ddragon_data = get_or_download_champions(CHAMPIONS_FILE)
 
         # Load presets from database
-        db = self.get_presets_db()
-        if db.is_empty():
+        if Preset.is_empty():
             # Import from file if database is empty
             self.champions = load_champions(CONFIG_FILE, BASE_CONFIG_FILE, self.ddragon_data)
-            db.import_from_champions(self.champions)
+            Preset.import_from_champions(self.champions)
             self.eel.log("Presets imported to database", "info")
         else:
             # Load from database
@@ -93,14 +85,14 @@ class AutoMatchBot:
         self.eel.log("Presets loaded", "success")
 
         # Load settings from database
-        self.auto_accept = db.get_setting('auto_accept')
-        self.auto_ban = db.get_setting('auto_ban')
-        self.auto_pick = db.get_setting('auto_pick')
+        self.auto_accept = Setting.get_setting('auto_accept')
+        self.auto_ban = Setting.get_setting('auto_ban')
+        self.auto_pick = Setting.get_setting('auto_pick')
 
-    def _load_champions_from_db(self) -> Champions:
+    @staticmethod
+    def _load_champions_from_db() -> Champions:
         """Load champions from database into Champions model"""
-        db = self.get_presets_db()
-        presets = db.get_all_presets()
+        presets = Preset.get_all_presets()
         champs = Champions()
 
         for role in ['top', 'jungle', 'middle', 'bottom', 'utility']:
@@ -321,10 +313,13 @@ class AutoMatchBot:
 def run_gui():
     """Initialize and start the Eel application"""
     web_folder = BASE_DIR / 'frontend'
-
-    bot = AutoMatchBot()
+    init_db()
+    Setting.init_default_settings()
+    Setting.get_all_settings()
 
     ddragon_data = get_or_download_champions(CHAMPIONS_FILE)
+    bot = AutoMatchBot(ddragon_data)
+
     eel_from_js = EelForJS(bot, ddragon_data)
     eel.expose(eel_from_js.start_bot)
     eel.expose(eel_from_js.stop_bot)
